@@ -66,7 +66,7 @@ void emulator_run( emulator_t *emu )
 {
   int i;
 
-  for ( i = 0; i < 10; ++i )
+  for ( i = 0; i < 100; ++i )
   {
     cpu_tick( emu );
   }

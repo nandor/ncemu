@@ -9,12 +9,15 @@
 
 typedef struct _emulator_t emulator_t;
 
+
 typedef struct _cpu_t
 {
-    int16_t pc;
-    int8_t  flags;
+    uint16_t pc;
+    uint16_t sp;
     int16_t r[16];
+    uint8_t flags;    
 } cpu_t;
+
 
 typedef union _opcode_t
 {
@@ -51,11 +54,34 @@ typedef union _opcode_t
       };
     };
   };
-} opcode_t;
+} __attribute__(( packed )) opcode_t;
 
-typedef void ( *instr_t ) ( emulator_t *, opcode_t * );
 
-void cpu_tick ( emulator_t * emu );
+typedef void ( *op_t ) ( emulator_t *, opcode_t * );
+
+
+typedef struct _instr_t {
+  op_t  op;
+  int   set_pc; 
+  int   set_z;  
+  int   set_o;  
+  int   set_n;  
+  int   set_c;
+} instr_t;
+
+
+#define set_n( c ) ( (c)->flags |= (1 << 7 ) )
+#define set_o( c ) ( (c)->flags |= (1 << 6 ) )
+#define set_z( c ) ( (c)->flags |= (1 << 2 ) )
+#define set_c( c ) ( (c)->flags |= (1 << 1 ) )
+
+#define clear_n( c ) ( (c)->flags &= ~(1 << 7 ) )
+#define clear_o( c ) ( (c)->flags &= ~(1 << 6 ) )
+#define clear_z( c ) ( (c)->flags &= ~(1 << 2 ) )
+#define clear_c( c ) ( (c)->flags &= ~(1 << 1 ) )
+
+
+void    cpu_tick ( emulator_t *emu );
 
 #endif
 
