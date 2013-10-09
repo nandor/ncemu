@@ -18,4 +18,4 @@ SET( HEADERS emulator.h
              crc.h )
 
 ADD_EXECUTABLE( ncemu ${SOURCES} ${HEADERS} )
-TARGET_LINK_LIBRARIES( ncemu SDL)
+TARGET_LINK_LIBRARIES( ncemu )

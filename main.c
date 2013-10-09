@@ -16,7 +16,7 @@ int main( int argc, char **argv)
   }
 
   emulator_init( &emu );
-  emulator_load_ch16( &emu, "Mandel.c16" );
+  emulator_load_ch16( &emu, "Maze.c16" );
   emulator_run( &emu );
   emulator_free( &emu );
   

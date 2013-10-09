@@ -14,7 +14,7 @@ void op_00_nop( emulator_t *emu, opcode_t *op)
 
 void op_01_cls( emulator_t *emu, opcode_t *op)
 {
-
+    memset( &emu->vram, 0, sizeof( emu->vram ) );
 }
 
 
@@ -50,7 +50,7 @@ void op_06_drw( emulator_t *emu, opcode_t *op )
 
 void op_07_rnd( emulator_t *emu, opcode_t *op)
 {
-
+    emu->cpu.r[ op->rx ] = random() % op->hhll;
 }
 
 
@@ -188,6 +188,24 @@ void op_31_stm( emulator_t *emu, opcode_t *op )
 }
 
 
+void op_40_addi( emulator_t *emu, opcode_t *op )
+{
+
+}
+
+
+void op_41_add( emulator_t *emu, opcode_t *op )
+{
+
+}
+
+
+void op_42_add( emulator_t *emu, opcode_t *op )
+{
+
+}
+
+
 void op_60_andi( emulator_t *emu, opcode_t *op )
 {
 
@@ -298,9 +316,9 @@ instr_t instr_table[0x100] =
   { NULL,         0, 0, 0, 0, 0 },
   
   // 4x - Addition
-  { NULL,         0, 0, 0, 0, 0 },
-  { NULL,         0, 0, 0, 0, 0 },
-  { NULL,         0, 0, 0, 0, 0 },
+  { op_40_addi,   0, 1, 1, 1, 1 },
+  { op_41_add,    0, 1, 1, 1, 1 },
+  { op_42_add,    0, 1, 1, 1, 1 },
   { NULL,         0, 0, 0, 0, 0 },
   { NULL,         0, 0, 0, 0, 0 },
   { NULL,         0, 0, 0, 0, 0 },

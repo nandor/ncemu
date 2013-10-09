@@ -7,7 +7,11 @@
 
 typedef struct 
 {
-  uint8_t pad;
+    uint8_t bg;
+    uint8_t spritew;
+    uint8_t spriteh;
+    uint8_t hflip;
+    uint8_t vflip;
 } gpu_t;
 
 #endif

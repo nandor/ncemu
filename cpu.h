@@ -74,14 +74,18 @@ typedef struct _instr_t {
 #define set_o( c ) ( (c)->flags |= (1 << 6 ) )
 #define set_z( c ) ( (c)->flags |= (1 << 2 ) )
 #define set_c( c ) ( (c)->flags |= (1 << 1 ) )
-
+#define get_n( c ) ( ( (c)->flags & (1 << 7 ) ) != 0 )
+#define get_o( c ) ( ( (c)->flags & (1 << 6 ) ) != 0 )
+#define get_z( c ) ( ( (c)->flags & (1 << 2 ) ) != 0 )
+#define get_c( c ) ( ( (c)->flags & (1 << 1 ) ) != 0 )
 #define clear_n( c ) ( (c)->flags &= ~(1 << 7 ) )
 #define clear_o( c ) ( (c)->flags &= ~(1 << 6 ) )
 #define clear_z( c ) ( (c)->flags &= ~(1 << 2 ) )
 #define clear_c( c ) ( (c)->flags &= ~(1 << 1 ) )
 
 
-void    cpu_tick ( emulator_t *emu );
-
+void cpu_tick ( emulator_t *emu );
+int  cpu_cond ( emulator_t *emu, int cond );
+  
 #endif
 

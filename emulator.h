@@ -12,20 +12,13 @@
 
 typedef struct _emulator_t
 {
-  cpu_t   cpu;
-  gpu_t   gpu;
+  cpu_t     cpu;
+  gpu_t     gpu;
 
-  union
-  {
-    uint8_t ram[0x10000];
-    struct
-    {
-      uint8_t   rom[0xFDF0];
-      uint8_t   stack[0x200];
-      uint32_t  io;
-    };
-  };
-
+  uint8_t   ram[0x10000];
+  uint8_t   vram[320 * 240];
+  uint32_t  pal[16];
+  
   jmp_buf err_jmp;
   char    err_msg[8192];
 } emulator_t;
