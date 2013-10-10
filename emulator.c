@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <X11/Xlib.h>
 #include "emulator.h"
 #include "crc.h"
 

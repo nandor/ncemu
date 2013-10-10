@@ -104,13 +104,27 @@ void op_10_jmp( emulator_t *emu, opcode_t *op )
 
 void op_12_jx( emulator_t *emu, opcode_t *op )
 {
-
+    if ( cpu_cond( emu, op->rx ) )
+    {
+        emu->cpu.pc = op->hhll;
+    }
+    else
+    {
+        emu->cpu.pc += 4;
+    }
 }
 
 
 void op_13_jme( emulator_t *emu, opcode_t *op )
 {
-
+    if ( emu->cpu.r[ op-> rx ] = emu->cpu.r[ op->ry ] )
+    {
+        emu->cpu.pc = op->hhll;
+    }
+    else
+    {
+        emu->cpu.pc += 4;
+    }
 }
 
 
