@@ -23,17 +23,24 @@ void op_01_cls( emulator_t *emu, opcode_t *op)
 
 void op_02_vblnk( emulator_t *emu, opcode_t *op)
 {
+  if ( ! emu->gpu.vblank )
+  {
+    emu->cpu.pc -= 4;
+    return;
+  }
+
+  emu->gpu.vblank = 0;
 }
 
 
 void op_03_bcg( emulator_t *emu, opcode_t *op )
 {
+  emu->gpu.bgc = op->rz;
 }
 
 
 void op_04_spr( emulator_t *emu, opcode_t *op )
 {
-  printf( "%d %d\n", op->ll, op->hh );
   emu->gpu.sprite_w = op->ll;
   emu->gpu.sprite_h = op->hh;
 }
@@ -41,41 +48,13 @@ void op_04_spr( emulator_t *emu, opcode_t *op )
 
 void op_05_drw( emulator_t *emu, opcode_t *op )
 {
-  
+  gpu_draw_sprite( emu, &emu->ram[ op->hhll ], op->rx, op->ry );
 }
 
 
 void op_06_drw( emulator_t *emu, opcode_t *op )
 {
-  uint8_t * spr;
-  int16_t x, y, i, j;
-  uint32_t si, di;
-
-  if ( ! (spr = &emu->ram[ emu->cpu.r[ op->rz ] ] ) )
-  {
-    emulator_error( emu, "Invalid sprite index" );
-  }
-
-  x = emu->cpu.r[ op->rx ];
-  y = emu->cpu.r[ op->ry ];
-
-  for ( i = max( 0, -y ); i < min( emu->gpu.sprite_h, 240 - y ); ++i )
-  {
-    for ( j = max( 0, -x ); j < min( emu->gpu.sprite_w << 1, 320 - x ); ++j )
-    {
-      si = i * emu->gpu.sprite_w + ( j >> 1 );
-      di = ( y + i ) * 320 + x + j;
-
-      if ( j & 1 )
-      {
-        emu->gpu.vram[ di ] = ( spr[ si ] & 0x0F ) >> 0;
-      }
-      else
-      {
-        emu->gpu.vram[ di ] = ( spr[ si ] & 0xF0 ) >> 4;
-      }
-    }
-  }
+  gpu_draw_sprite( emu, &emu->ram[ emu->cpu.r[ op->rz ] ], op->rx, op->ry );
 }
 
 
@@ -193,6 +172,7 @@ void op_18_call( emulator_t *emu, opcode_t *op)
 
 void op_20_ldi( emulator_t *emu, opcode_t *op )
 {
+  memcpy( &emu->cpu.r[ op->rx ], &op->hhll, 2 );
   emu->cpu.r[ op->rx ] = (int16_t) op->hhll;
 }
 
@@ -489,6 +469,112 @@ void op_A2_div( emulator_t *emu, opcode_t *op )
 }
 
 
+void op_B0_shl( emulator_t *emu, opcode_t *op )
+{
+  int16_t *rx;
+
+  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx <<= op->rz );
+}
+
+
+void op_B1_shr( emulator_t *emu, opcode_t *op )
+{
+  uint16_t *rx;
+
+  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx >>= op->rz );
+}
+
+
+void op_B2_sar( emulator_t *emu, opcode_t *op )
+{
+  int16_t *rx;
+
+  rx = &emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx >>= op->rz );
+}
+
+
+void op_B3_shl( emulator_t *emu, opcode_t *op )
+{
+  uint16_t *rx;
+
+  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx <<= emu->cpu.r[ op->ry ] );
+}
+
+
+void op_B4_shr( emulator_t *emu, opcode_t *op )
+{
+  uint16_t *rx;
+
+  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx >>= emu->cpu.r[ op->ry ] );
+}
+
+
+void op_B5_sar( emulator_t *emu, opcode_t *op )
+{
+  int16_t *rx;
+
+  rx = &emu->cpu.r[ op->rx ];
+  cpu_flags_bit( emu, *rx >>= emu->cpu.r[ op->ry ] );
+}
+
+
+
+void op_C0_push( emulator_t *emu, opcode_t *op )
+{
+  memcpy( &emu->ram[ emu->cpu.sp ], &emu->cpu.r[ op->rx ], 2 );
+  emu->cpu.sp += 2;
+}
+
+
+void op_C1_pop( emulator_t *emu, opcode_t *op )
+{
+  emu->cpu.sp -= 2;
+  memcpy(&emu->cpu.r[ op->rx ], &emu->ram[ emu->cpu.sp ], 2);
+}
+
+
+void op_C2_pushall( emulator_t *emu, opcode_t *op )
+{
+  int i;
+
+  for ( i = 0; i < 16; ++i )
+  {
+    memcpy( &emu->ram[ emu->cpu.sp ], &emu->cpu.r[ i ], 2 );
+    emu->cpu.sp += 2;
+  }
+}
+
+
+void op_C3_popall( emulator_t *emu, opcode_t *op )
+{
+  int i;
+
+  for ( i = 0; i < 16; ++i )
+  {
+    emu->cpu.sp -= 2;
+    memcpy( &emu->cpu.r[ i ], &emu->ram[ emu->cpu.sp ], 2 );
+  }
+}
+
+
+void op_C4_pushf( emulator_t *emu, opcode_t *op )
+{
+  memcpy( &emu->ram[ emu->cpu.sp ], &emu->cpu.flags, 1 );
+  emu->cpu.sp += 2;
+}
+
+
+void op_C5_popf( emulator_t *emu, opcode_t *op )
+{
+  emu->cpu.sp -= 2;
+  memcpy( &emu->cpu.flags, &emu->ram[ emu->cpu.sp ], 1 );
+}
+
 
 op_t op_table[0x100] =
 {
@@ -691,15 +777,14 @@ op_t op_table[0x100] =
   NULL,
   
   // Bx - Logical / Arithmetic Shifts
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  op_B0_shl,
+  op_B1_shr,
+  op_B0_shl,
+  op_B2_sar,
+  op_B3_shl,
+  op_B4_shr,
+  op_B3_shl,
+  op_B5_sar,
   NULL,
   NULL,
   NULL,
@@ -709,12 +794,12 @@ op_t op_table[0x100] =
   NULL,
   
   // Cx - Push / Pop
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  op_C0_push,
+  op_C1_pop,
+  op_C2_pushall,
+  op_C3_popall,
+  op_C4_pushf,
+  op_C5_popf,
   NULL,
   NULL,
   NULL,

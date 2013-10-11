@@ -39,13 +39,13 @@ typedef union _opcode_t
 
     union
     {
-      uint16_t hhll;
-      uint16_t vtsr;
+      int16_t hhll;
+      int16_t vtsr;
 
       struct
       {
-        uint8_t ll;
-        uint8_t hh;
+        int8_t ll;
+        int8_t hh;
       };
 
       struct

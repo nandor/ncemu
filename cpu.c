@@ -46,7 +46,7 @@ int cpu_cond ( emulator_t *emu, int cond )
     case 0x8: return ! get_c( cpu );
     case 0x9: return get_c( cpu );
     case 0xA: return get_c( cpu) && get_z( cpu );
-    case 0xB: return get_c( cpu );
+    case 0xB: return get_o( cpu ) == get_n( cpu ) && ! get_z( cpu );
     case 0xC: return get_o( cpu ) == get_n( cpu );
     case 0xD: return get_o( cpu ) != get_n( cpu );
     case 0xE: return get_o( cpu ) != get_n( cpu ) && get_z( cpu );
@@ -76,31 +76,29 @@ void cpu_flags_add( emulator_t *emu, int16_t a, int16_t b )
 
 void cpu_flags_sub( emulator_t *emu, int16_t a, int16_t b )
 {
-  uint32_t rd;
-  int16_t rh;
+  int32_t r;
 
   emu->cpu.flags = 0x0;
-  rd = ( uint16_t )a - ( uint16_t) b;
-  rh = a + b;
+  r = (int32_t)a - b;
 
-  if ( rd > UINT16_MAX ) set_c( &emu->cpu );
-  if ( rh == 0) set_z( &emu->cpu );
-  if ( rh > 0 && a < 0 && b < 0 ) set_o( &emu->cpu );
-  if ( rh < 0 && a > 0 && b > 0 ) set_o( &emu->cpu );
-  if ( rh < 0 ) set_n( &emu->cpu );
+  if ( r == 0 ) set_z( &emu->cpu );
+  if ( r < 0 ) set_n( &emu->cpu );
+  if ( r < INT16_MIN || INT16_MAX < r ) set_c( &emu->cpu );
+  if ( (int16_t)r < 0 && a > 0 && b < 0 ) set_o( &emu->cpu );
+  if ( (int16_t)r > 0 && a < 0 && b > 0 ) set_o( &emu->cpu );
 }
 
 
 void cpu_flags_mul( emulator_t *emu, int16_t a, int16_t b )
 {
-  uint32_t rd;
+  uint32_t r;
   
   emu->cpu.flags = 0x0;
-  rd = ( uint16_t)a * ( uint16_t ) b;
+  r = (uint16_t)a * (uint16_t)b;
 
-  if (rd > UINT16_MAX ) set_c( &emu->cpu );
-  if (rd == 0 ) set_z( &emu->cpu );
-  if (rd < 0 ) set_n( &emu->cpu );
+  if (r > UINT16_MAX ) set_c( &emu->cpu );
+  if (r == 0 ) set_z( &emu->cpu );
+  if ( ( (int16_t)r ) & 0x8000 ) set_n( &emu->cpu );
 }
 
 
@@ -113,12 +111,13 @@ void cpu_flags_div( emulator_t *emu, int16_t a, int16_t b )
 
   if ( a % b != 0 ) set_c( &emu->cpu );
   if ( r == 0 ) set_z( &emu->cpu );
-  if ( r < 0 ) set_n( &emu->cpu );
+  if ( r & 0x8000 ) set_n( &emu->cpu );
 }
 
 
 void cpu_flags_bit( emulator_t *emu, int16_t r )
 {
-  if (r == 0 ) set_z( &emu->cpu );
-  if (r < 0 ) set_n( &emu->cpu );
+  emu->cpu.flags = 0x0;
+  if ( r == 0 ) set_z( &emu->cpu );
+  if ( r & 0x8000 ) set_n( &emu->cpu );
 }
