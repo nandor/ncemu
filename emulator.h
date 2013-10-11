@@ -7,20 +7,22 @@
 
 #include <stdint.h>
 #include <setjmp.h>
+#include <SDL/SDL.h>
 #include "cpu.h"
 #include "gpu.h"
 
+
 typedef struct _emulator_t
 {
-  cpu_t     cpu;
-  gpu_t     gpu;
+  cpu_t         cpu;
+  gpu_t         gpu;
 
-  uint8_t   ram[0x10000];
-  uint8_t   vram[320 * 240];
-  uint32_t  pal[16];
+  uint8_t       ram[0x10000];
   
-  jmp_buf err_jmp;
-  char    err_msg[8192];
+  jmp_buf       err_jmp;
+  char          err_msg[8192];
+
+  SDL_Surface * screen;
 } emulator_t;
 
 

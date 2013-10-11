@@ -5,14 +5,24 @@
 #ifndef GPU_H
 #define GPU_H
 
+#include <stdint.h>
+
+#define DISPLAY_X 320
+#define DISPLAY_Y 240
+
+
 typedef struct 
 {
     uint8_t bg;
-    uint8_t spritew;
-    uint8_t spriteh;
+    uint8_t sprite_w;
+    uint8_t sprite_h;
     uint8_t hflip;
     uint8_t vflip;
+
+    uint8_t   vram[ DISPLAY_X * DISPLAY_Y ];
+    uint32_t  pal[ 16 ];
 } gpu_t;
+
 
 #endif
 

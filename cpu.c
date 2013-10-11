@@ -23,8 +23,6 @@ void cpu_tick( emulator_t * emu )
     emulator_error( emu, "Invalid opcode 0x%08x", op.dw );
   }
 
-  printf("%x %x\n", op.op, op.dw );
-
   (*(instr->op)) ( emu, &op );
 
   if ( ! instr->set_pc ) emu->cpu.pc += 4;

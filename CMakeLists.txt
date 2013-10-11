@@ -17,5 +17,7 @@ SET( HEADERS emulator.h
              gpu.h
              crc.h )
 
+SET( LIBS    SDL )
+
 ADD_EXECUTABLE( ncemu ${SOURCES} ${HEADERS} )
-TARGET_LINK_LIBRARIES( ncemu )
+TARGET_LINK_LIBRARIES( ncemu ${LIBS})

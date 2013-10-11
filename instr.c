@@ -7,6 +7,9 @@
 #include <string.h>
 #include "emulator.h"
 
+int min(int16_t a, int16_t b) { return a < b ? a : b; }
+int max(int16_t a, int16_t b) { return a > b ? a : b; }
+
 void op_00_nop( emulator_t *emu, opcode_t *op)
 {
 }
@@ -14,25 +17,24 @@ void op_00_nop( emulator_t *emu, opcode_t *op)
 
 void op_01_cls( emulator_t *emu, opcode_t *op)
 {
-    memset( &emu->vram, 0, sizeof( emu->vram ) );
+  memset( &emu->gpu.vram, 0, sizeof( emu->gpu.vram ) );
 }
 
 
 void op_02_vblnk( emulator_t *emu, opcode_t *op)
 {
-
 }
 
 
 void op_03_bcg( emulator_t *emu, opcode_t *op )
 {
-
 }
 
 
 void op_04_spr( emulator_t *emu, opcode_t *op )
 {
-
+  emu->gpu.sprite_w = op->ll;
+  emu->gpu.sprite_h = op->hh;
 }
 
 
@@ -44,13 +46,34 @@ void op_05_drw( emulator_t *emu, opcode_t *op )
 
 void op_06_drw( emulator_t *emu, opcode_t *op )
 {
+  uint8_t * spr;
+  int16_t x, y, i, j, si, di;
 
+  if ( ! (spr = &emu->ram[ emu->cpu.r[ op->rz ] ] ) )
+  {
+    emulator_error( emu, "Invalid sprite index" );
+  }
+
+  x = emu->cpu.r[ op->rx ];
+  y = emu->cpu.r[ op->ry ];
+
+  for ( i = 0; i < emu->gpu.sprite_h; ++i )
+  {
+    for ( j = 0; j < emu->gpu.sprite_w; ++j )
+    {
+      si = i * emu->gpu.sprite_w + j;
+      di = ( y + i ) * 320 + ( x + ( j << 1 ) );
+
+      emu->gpu.vram[ di ]    = (spr[ si ] & 0x0F) >> 0;
+      emu->gpu.vram[ di + 1] = (spr[ si ] & 0xF0) >> 8;
+    }
+  }
 }
 
 
 void op_07_rnd( emulator_t *emu, opcode_t *op)
 {
-    emu->cpu.r[ op->rx ] = random() % op->hhll;
+  emu->cpu.r[ op->rx ] = random() % ( op->hhll + 1 );
 }
 
 
@@ -104,27 +127,27 @@ void op_10_jmp( emulator_t *emu, opcode_t *op )
 
 void op_12_jx( emulator_t *emu, opcode_t *op )
 {
-    if ( cpu_cond( emu, op->rx ) )
-    {
-        emu->cpu.pc = op->hhll;
-    }
-    else
-    {
-        emu->cpu.pc += 4;
-    }
+  if ( cpu_cond( emu, op->rx ) )
+  {
+    emu->cpu.pc = op->hhll;
+  }
+  else
+  {
+    emu->cpu.pc += 4;
+  }
 }
 
 
 void op_13_jme( emulator_t *emu, opcode_t *op )
 {
-    if ( emu->cpu.r[ op-> rx ] = emu->cpu.r[ op->ry ] )
-    {
-        emu->cpu.pc = op->hhll;
-    }
-    else
-    {
-        emu->cpu.pc += 4;
-    }
+  if ( emu->cpu.r[ op->rx ] == emu->cpu.r[ op->ry ] )
+  {
+    emu->cpu.pc = op->hhll;
+  }
+  else
+  {
+    emu->cpu.pc += 4;
+  }
 }
 
 
@@ -204,7 +227,20 @@ void op_31_stm( emulator_t *emu, opcode_t *op )
 
 void op_40_addi( emulator_t *emu, opcode_t *op )
 {
+  int16_t t, a, b;
 
+  a = emu->cpu.r[ op->rx ];
+  b = op->hhll;
+
+  t = a + b;
+
+  emu->cpu.r[ op->rx ] = t;
+
+  if ( t < 0 ) set_n( &emu->cpu );
+  if ( t == 0) set_z( &emu->cpu );
+  if ( t >= 0 && a < 0 && b < 0 ) set_o( &emu->cpu );
+  if ( t <= 0 && a > 0 && b > 0 ) set_o( &emu->cpu );
+  // TODO: set c
 }
 
 
