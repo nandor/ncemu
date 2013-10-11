@@ -60,16 +60,6 @@ typedef union _opcode_t
 typedef void ( *op_t ) ( emulator_t *, opcode_t * );
 
 
-typedef struct _instr_t {
-  op_t  op;
-  int   set_pc; 
-  int   set_z;  
-  int   set_o;  
-  int   set_n;  
-  int   set_c;
-} instr_t;
-
-
 #define set_n( c ) ( (c)->flags |= (1 << 7 ) )
 #define set_o( c ) ( (c)->flags |= (1 << 6 ) )
 #define set_z( c ) ( (c)->flags |= (1 << 2 ) )
@@ -84,8 +74,13 @@ typedef struct _instr_t {
 #define clear_c( c ) ( (c)->flags &= ~(1 << 1 ) )
 
 
-void cpu_tick ( emulator_t *emu );
-int  cpu_cond ( emulator_t *emu, int cond );
-  
+void cpu_tick( emulator_t *emu );
+int  cpu_cond( emulator_t *emu, int cond );
+void cpu_flags_add( emulator_t *emu, int16_t a, int16_t b );
+void cpu_flags_sub( emulator_t *emu, int16_t a, int16_t b );  
+void cpu_flags_mul( emulator_t *emu, int16_t a, int16_t b );
+void cpu_flags_div( emulator_t *emu, int16_t a, int16_t b );
+void cpu_flags_bit( emulator_t *emu, int16_t r );
+
 #endif
 

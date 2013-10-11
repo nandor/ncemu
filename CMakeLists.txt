@@ -8,7 +8,7 @@ PROJECT( NCEMU )
 SET( SOURCES main.c
              emulator.c
              cpu.c
-             instr.c
+             op.c
              gpu.c
              crc.c )
 

@@ -97,7 +97,7 @@ void emulator_load_ch16( emulator_t * emu, const char *fn )
   }
 
   memcpy( &emu->ram, rom, hdr.size );
-  emu->cpu.pc = hdr.start;
+  emu->cpu.pc = hdr.start - 4;
 }
 
 
@@ -152,7 +152,11 @@ void emulator_run( emulator_t *emu )
       }
     }
 
-    cpu_tick( emu );
+    int i;
+    for (i = 0; i < 1; ++i)
+    {
+      cpu_tick( emu );
+    }
     emulator_blit( emu );
   
     SDL_Flip( emu->screen );
@@ -165,10 +169,12 @@ void emulator_error( emulator_t *emu, const char *fmt, ...)
   va_list ap;
 
   va_start( ap, fmt);
-  vsnprintf( emu->err_msg, sizeof( emu->err_msg ), fmt, ap );
+  vfprintf( stderr, fmt, ap );
+  fputc( '\n', stderr );
   va_end( ap );
 
-  longjmp( emu->err_jmp, 0 );
+  emulator_free( emu );
+  exit( -1 );
 }
 
 

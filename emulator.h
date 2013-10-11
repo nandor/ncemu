@@ -6,7 +6,6 @@
 #define EMULATOR_H
 
 #include <stdint.h>
-#include <setjmp.h>
 #include <SDL/SDL.h>
 #include "cpu.h"
 #include "gpu.h"
@@ -18,9 +17,6 @@ typedef struct _emulator_t
   gpu_t         gpu;
 
   uint8_t       ram[0x10000];
-  
-  jmp_buf       err_jmp;
-  char          err_msg[8192];
 
   SDL_Surface * screen;
 } emulator_t;
