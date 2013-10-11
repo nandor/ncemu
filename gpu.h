@@ -36,6 +36,8 @@ typedef struct
 
 
 void gpu_draw_sprite( emulator_t *emu, uint8_t *spr, int16_t x, int16_t y );
+void gpu_blit( emulator_t *emu );
+void gpu_load_pal( emulator_t *emu, uint8_t *loc );
 
 #endif
 

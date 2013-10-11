@@ -44,14 +44,14 @@ void emulator_init( emulator_t *emu )
   emu->gpu.pal[0xF] = 0xFFFFFF; // White
 
   // Initialise the controller
-  emu->km[0x0].key = SDLK_w; emu->km[0x0].loc = 0xFFF0; emu->km[0x0].bit = 0; 
-  emu->km[0x1].key = SDLK_s; emu->km[0x1].loc = 0xFFF0; emu->km[0x1].bit = 1; 
-  emu->km[0x2].key = SDLK_a; emu->km[0x2].loc = 0xFFF0; emu->km[0x2].bit = 2; 
-  emu->km[0x3].key = SDLK_d; emu->km[0x3].loc = 0xFFF0; emu->km[0x3].bit = 3; 
-  emu->km[0x4].key = SDLK_q; emu->km[0x4].loc = 0xFFF0; emu->km[0x4].bit = 4; 
-  emu->km[0x5].key = SDLK_e; emu->km[0x5].loc = 0xFFF0; emu->km[0x5].bit = 5; 
-  emu->km[0x6].key = SDLK_1; emu->km[0x6].loc = 0xFFF0; emu->km[0x6].bit = 6; 
-  emu->km[0x7].key = SDLK_2; emu->km[0x7].loc = 0xFFF0; emu->km[0x7].bit = 7;
+  emu->km[0x0].key = SDLK_w;        emu->km[0x0].loc = 0xFFF0; emu->km[0x0].bit = 0; 
+  emu->km[0x1].key = SDLK_s;        emu->km[0x1].loc = 0xFFF0; emu->km[0x1].bit = 1; 
+  emu->km[0x2].key = SDLK_a;        emu->km[0x2].loc = 0xFFF0; emu->km[0x2].bit = 2; 
+  emu->km[0x3].key = SDLK_d;        emu->km[0x3].loc = 0xFFF0; emu->km[0x3].bit = 3; 
+  emu->km[0x4].key = SDLK_q;        emu->km[0x4].loc = 0xFFF0; emu->km[0x4].bit = 4; 
+  emu->km[0x5].key = SDLK_e;        emu->km[0x5].loc = 0xFFF0; emu->km[0x5].bit = 5; 
+  emu->km[0x6].key = SDLK_1;        emu->km[0x6].loc = 0xFFF0; emu->km[0x6].bit = 6; 
+  emu->km[0x7].key = SDLK_2;        emu->km[0x7].loc = 0xFFF0; emu->km[0x7].bit = 7;
 
   emu->km[0x8].key = SDLK_UP;       emu->km[0x8].loc = 0xFFF2; emu->km[0x8].bit = 0; 
   emu->km[0x9].key = SDLK_DOWN;     emu->km[0x9].loc = 0xFFF2; emu->km[0x9].bit = 1; 
@@ -121,38 +121,6 @@ void emulator_load_ch16( emulator_t * emu, const char *fn )
 }
 
 
-void emulator_blit( emulator_t *emu )
-{
-  int i, j, idx;
-  uint8_t *s, *pix, c;
-
-  if ( SDL_MUSTLOCK( emu->screen ) ) SDL_LockSurface( emu->screen );
-
-  if ( ! (s = (uint8_t*)emu->screen->pixels ) )
-  {
-    emulator_error( emu, "Cannot access surface" );
-  }
-
-  for ( i = 0; i < 240; ++i )
-  {
-    for ( j = 0; j < 320; ++j )
-    {
-      pix = s + i * emu->screen->pitch + j * emu->screen->format->BytesPerPixel;
-      idx = i * 320 + j;
-
-      c = emu->gpu.vram[ idx ];
-      c = c ? c : emu->gpu.bgc;
-      
-      pix[0] = (emu->gpu.pal[ c ] & 0x00ff0000) >> 16;
-      pix[1] = (emu->gpu.pal[ c ] & 0x0000ff00) >> 8;
-      pix[2] = (emu->gpu.pal[ c ] & 0x000000ff) >> 0;
-    }
-  }
-
-  if ( SDL_MUSTLOCK( emu->screen ) ) SDL_UnlockSurface( emu->screen );
-}
-
-
 void emulator_run( emulator_t *emu )
 {
   int running = 1, i;
@@ -174,9 +142,16 @@ void emulator_run( emulator_t *emu )
         }
       }
     }
+    
+    for (i = 0; i < 16667; ++i)
+    {
+      cpu_tick( emu );
+    }
 
     // Retrieve controller states
     key_state = SDL_GetKeyState( NULL );
+    memset( &emu->ram[ 0xFFF0 ], 0, 4 );
+    
     for ( i = 0; i < 16; ++i )
     {
       if ( emu->km[ i ].key )
@@ -184,23 +159,16 @@ void emulator_run( emulator_t *emu )
         port = ( uint16_t* )&emu->ram[ emu->km[ i ].loc ];
         if ( key_state[ emu->km[ i ].key ] )
         {
-          (*port) |= ( 1 << emu->km[ i ].bit );
+          *port |= ( 1 << emu->km[ i ].bit );
         }
         else
         {
-          (*port) &= ~( 1 << emu->km[ i ].bit );
+          *port &= ~( 1 << emu->km[ i ].bit );
         }
       }
     }
 
-    for (i = 0; i < 16667; ++i)
-    {
-      cpu_tick( emu );
-    }
-
-    emulator_blit( emu );
-    emu->gpu.vblank = 1;
-    
+    gpu_blit( emu );   
 
     SDL_Delay( 15.0 );
     SDL_Flip( emu->screen );

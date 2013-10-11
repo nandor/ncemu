@@ -59,31 +59,29 @@ int cpu_cond ( emulator_t *emu, int cond )
 
 void cpu_flags_add( emulator_t *emu, int16_t a, int16_t b )
 {
-  uint32_t rd;
-  int16_t rh;
+  uint32_t r;
 
   emu->cpu.flags = 0x0;
-  rd = ( uint16_t )a + ( uint16_t) b;
-  rh = a + b;
+  r = (uint16_t)a + (uint16_t) b;
 
-  if ( rd > UINT16_MAX ) set_c( &emu->cpu );
-  if ( rh == 0) set_z( &emu->cpu );
-  if ( rh > 0 && a < 0 && b < 0 ) set_o( &emu->cpu );
-  if ( rh < 0 && a > 0 && b > 0 ) set_o( &emu->cpu );
-  if ( rh < 0 ) set_n( &emu->cpu );
+  if ( r == 0) set_z( &emu->cpu );
+  if ( UINT16_MAX < r ) set_c( &emu->cpu );
+  if ( (int16_t)r < 0 ) set_n( &emu->cpu );
+  if ( (int16_t)r > 0 && a < 0 && b < 0 ) set_o( &emu->cpu );
+  if ( (int16_t)r < 0 && a > 0 && b > 0 ) set_o( &emu->cpu );
 }
 
 
 void cpu_flags_sub( emulator_t *emu, int16_t a, int16_t b )
 {
-  int32_t r;
+  uint32_t r;
 
   emu->cpu.flags = 0x0;
-  r = (int32_t)a - b;
+  r = (uint16_t)a - (uint16_t)b;
 
   if ( r == 0 ) set_z( &emu->cpu );
-  if ( r < 0 ) set_n( &emu->cpu );
-  if ( r < INT16_MIN || INT16_MAX < r ) set_c( &emu->cpu );
+  if ( UINT16_MAX < r ) set_c( &emu->cpu );
+  if ( (int16_t)r < 0 ) set_n( &emu->cpu );
   if ( (int16_t)r < 0 && a > 0 && b < 0 ) set_o( &emu->cpu );
   if ( (int16_t)r > 0 && a < 0 && b > 0 ) set_o( &emu->cpu );
 }
