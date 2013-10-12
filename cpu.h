@@ -5,7 +5,9 @@
 #ifndef CPU_H
 #define CPU_H
 
+
 #include <stdint.h>
+
 
 typedef struct _emulator_t emulator_t;
 
@@ -33,15 +35,14 @@ typedef union _opcode_t
         uint8_t rx : 4;
         uint8_t ry : 4;
       };
-
+      
       uint8_t ad;
     };
 
     union
     {
       int16_t hhll;
-      int16_t vtsr;
-
+      
       struct
       {
         int8_t ll;
@@ -74,6 +75,8 @@ typedef void ( *op_t ) ( emulator_t *, opcode_t * );
 #define clear_c( c ) ( (c)->flags &= ~(1 << 1 ) )
 
 
+void cpu_init( emulator_t *emu );
+void cpu_free( emulator_t *emu );
 void cpu_tick( emulator_t *emu );
 int  cpu_cond( emulator_t *emu, int cond );
 void cpu_flags_add( emulator_t *emu, int16_t a, int16_t b );

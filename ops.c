@@ -28,7 +28,7 @@ void op_02_vblnk( emulator_t *emu, opcode_t *op)
     emu->cpu.pc -= 4;
     return;
   }
-
+  
   emu->gpu.vblank = 0;
 }
 
@@ -48,7 +48,7 @@ void op_04_spr( emulator_t *emu, opcode_t *op )
 
 void op_05_drw( emulator_t *emu, opcode_t *op )
 {
-  gpu_draw_sprite( emu, &emu->ram[ op->hhll ], op->rx, op->ry );
+  gpu_draw_sprite( emu, &emu->ram[ (uint16_t)op->hhll ], op->rx, op->ry );
 }
 
 
@@ -60,55 +60,67 @@ void op_06_drw( emulator_t *emu, opcode_t *op )
 
 void op_07_rnd( emulator_t *emu, opcode_t *op)
 {
-  emu->cpu.r[ op->rx ] = random() % ( op->hhll + 1 );
+  emu->cpu.r[ op->rx ] = random() % ( (uint16_t)op->hhll + 1 );
 }
 
 
 void op_08_flip( emulator_t *emu, opcode_t *op)
 {
-
+  switch ( op->hh )
+  {
+    case 0x0: emu->gpu.hflip = 0; emu->gpu.vflip = 0; break;
+    case 0x1: emu->gpu.hflip = 0; emu->gpu.vflip = 1; break;
+    case 0x2: emu->gpu.hflip = 1; emu->gpu.vflip = 0; break;
+    case 0x3: emu->gpu.hflip = 1; emu->gpu.vflip = 1; break;
+    default: emulator_error( emu, "Invalid flip: 0x%02x", op->hh );
+  }
 }
 
 
 void op_09_snd0( emulator_t *emu, opcode_t *op )
 {
-
+  snd_stop( emu );
 }
 
 
 void op_0A_snd1( emulator_t *emu, opcode_t *op )
 {
-
+  snd_tone( emu, 500, op->hhll );
 }
 
 
 void op_0B_snd2( emulator_t *emu, opcode_t *op )
 {
-
+  snd_tone( emu, 1000, op->hhll );
 }
 
 
 void op_0C_snd3( emulator_t *emu, opcode_t *op )
 {
-
+  snd_tone( emu, 1500, op->hhll );
 }
 
 
 void op_0E_sng( emulator_t *emu, opcode_t *op)
 {
-
+  snd_tone( emu, emu->cpu.r[ op->rx ], op->hhll );
 }
 
 
 void op_0D_snp( emulator_t *emu, opcode_t *op )
 {
-
+  emu->snd.att  = ( op->ad & 0xF0 ) >> 4;
+  emu->snd.dec  = ( op->ad & 0x0F ) >> 0;
+  emu->snd.vol  = ( op->hhll & 0x000F ) >> 0;
+  emu->snd.type = ( op->hhll & 0x00F0 ) >> 4;
+  emu->snd.sus  = ( op->hhll & 0x0F00 ) >> 8;
+  emu->snd.rls  = ( op->hhll & 0xF000 ) >> 12;
 }
 
 
 void op_10_jmp( emulator_t *emu, opcode_t *op ) 
 {
-  emu->cpu.pc = op->hhll;
+  emu->cpu.pc = (uint16_t) op->hhll;
 }
 
 
@@ -116,7 +128,7 @@ void op_12_jx( emulator_t *emu, opcode_t *op )
 {
   if ( cpu_cond( emu, op->rx ) )
   {
-    emu->cpu.pc = op->hhll;
+    emu->cpu.pc = (uint16_t) op->hhll;
   }
 }
 
@@ -125,7 +137,7 @@ void op_13_jme( emulator_t *emu, opcode_t *op )
 {
   if ( emu->cpu.r[ op->rx ] == emu->cpu.r[ op->ry ] )
   {
-    emu->cpu.pc = op->hhll;
+    emu->cpu.pc = (uint16_t) op->hhll;
   }
 }
 
@@ -179,19 +191,19 @@ void op_20_ldi( emulator_t *emu, opcode_t *op )
 
 void op_21_ldi( emulator_t *emu, opcode_t *op )
 {
-  emu->cpu.sp = op->hhll;
+  emu->cpu.sp = (uint16_t) op->hhll;
 }
 
 
 void op_22_ldm( emulator_t *emu, opcode_t *op )
 {
-  memcpy( &emu->cpu.r[ op->rx ], &emu->ram[ op->hhll ], 2 );
+  memcpy( &emu->cpu.r[ op->rx ], &emu->ram[ (uint16_t)op->hhll ], 2 );
 }
 
 
 void op_23_ldm( emulator_t *emu, opcode_t *op )
 {
-  memcpy( &emu->cpu.r[ op->rx ], &emu->ram[ emu->cpu.r[ op-> ry ] ], 2 );
+  memcpy( &emu->cpu.r[ op->rx ], &emu->ram[ (uint16_t)emu->cpu.r[ op->ry ] ], 2 );
 }
 
 
@@ -203,13 +215,13 @@ void op_24_mov( emulator_t *emu, opcode_t *op )
 
 void op_30_stm( emulator_t *emu, opcode_t *op )
 {
-  memcpy( &emu->ram[ op->hhll ], &emu->cpu.r[ op->rx ], 2 );
+  memcpy( &emu->ram[ (uint16_t) op->hhll ], &emu->cpu.r[ op->rx ], 2 );
 }
 
 
 void op_31_stm( emulator_t *emu, opcode_t *op )
 {
-  memcpy( &emu->ram[ emu->cpu.r[ op->ry ] ], &emu->cpu.r[ op->rx ], 2 );
+  memcpy( &emu->ram[ (uint16_t)emu->cpu.r[ op->ry ] ], &emu->cpu.r[ op->rx ], 2 );
 }
 
 
@@ -299,7 +311,6 @@ void op_54_cmp( emulator_t *emu, opcode_t *op )
 void op_60_andi( emulator_t *emu, opcode_t *op )
 {
   int16_t *rx;
-
   rx = &emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx &= op->hhll );
 }
@@ -394,7 +405,6 @@ void op_81_xor( emulator_t *emu, opcode_t *op )
 void op_82_xor( emulator_t *emu, opcode_t *op )
 {
   int16_t *rz, rx, ry;
-  uint16_t rr;
 
   rx = emu->cpu.r[ op->rx ];
   ry = emu->cpu.r[ op->ry ];
@@ -474,8 +484,7 @@ void op_B0_shl( emulator_t *emu, opcode_t *op )
 {
   int16_t *rx;
 
-	printf("shl");
-  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  rx = &emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx <<= op->rz );
 }
 
@@ -483,8 +492,7 @@ void op_B0_shl( emulator_t *emu, opcode_t *op )
 void op_B1_shr( emulator_t *emu, opcode_t *op )
 {
   uint16_t *rx;
-
-	printf("shr");
+  
   rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx >>= op->rz );
 }
@@ -493,7 +501,7 @@ void op_B1_shr( emulator_t *emu, opcode_t *op )
 void op_B2_sar( emulator_t *emu, opcode_t *op )
 {
   int16_t *rx;
-  fprintf(stderr, "sar\n");
+  
   rx = &emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx >>= op->rz );
 }
@@ -501,10 +509,9 @@ void op_B2_sar( emulator_t *emu, opcode_t *op )
 
 void op_B3_shl( emulator_t *emu, opcode_t *op )
 {
-  uint16_t *rx;
+  int16_t *rx;
 
-	printf("shl");
-  rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
+  rx = &emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx <<= emu->cpu.r[ op->ry ] );
 }
 
@@ -513,7 +520,6 @@ void op_B4_shr( emulator_t *emu, opcode_t *op )
 {
   uint16_t *rx;
 
-	printf("shr");
   rx = ( uint16_t* )&emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx >>= emu->cpu.r[ op->ry ] );
 }
@@ -522,7 +528,7 @@ void op_B4_shr( emulator_t *emu, opcode_t *op )
 void op_B5_sar( emulator_t *emu, opcode_t *op )
 {
   int16_t *rx;
-	printf("sar");
+
   rx = &emu->cpu.r[ op->rx ];
   cpu_flags_bit( emu, *rx >>= emu->cpu.r[ op->ry ] );
 }
@@ -547,7 +553,7 @@ void op_C2_pushall( emulator_t *emu, opcode_t *op )
 {
   int i;
 
-  for ( i = 0; i < 16; ++i )
+  for ( i = 0x0; i <= 0xF; ++i )
   {
     memcpy( &emu->ram[ emu->cpu.sp ], &emu->cpu.r[ i ], 2 );
     emu->cpu.sp += 2;
@@ -559,7 +565,7 @@ void op_C3_popall( emulator_t *emu, opcode_t *op )
 {
   int i;
 
-  for ( i = 0; i < 16; ++i )
+  for ( i = 0xF; i >= 0x0; --i )
   {
     emu->cpu.sp -= 2;
     memcpy( &emu->cpu.r[ i ], &emu->ram[ emu->cpu.sp ], 2 );
@@ -581,24 +587,36 @@ void op_C5_popf( emulator_t *emu, opcode_t *op )
 }
 
 
+void op_D0_pal( emulator_t *emu, opcode_t *op )
+{
+  gpu_load_pal( emu, &emu->ram[ (uint16_t) op->hhll ] );
+}
+
+
+void op_D1_pal( emulator_t *emu, opcode_t *op )
+{
+  gpu_load_pal( emu, &emu->ram[ (uint16_t) emu->cpu.r[ op->rx ] ] );
+}
+
+
 op_t op_table[0x100] =
 {
   // 0x - Misc/Video/Audio
-  op_00_nop,
-  op_01_cls,
+  op_00_nop,  
+  op_01_cls,  
   op_02_vblnk, 
-  op_03_bcg,
-  op_04_spr,
-  op_05_drw,
-  op_06_drw,
-  op_07_rnd,
-  op_08_flip,
-  op_09_snd0,
-  op_0A_snd1,
-  op_0B_snd2,
-  op_0C_snd3,
-  op_0D_snp,
-  op_0E_sng,
+  op_03_bcg,  
+  op_04_spr,  
+  op_05_drw,  
+  op_06_drw,  
+  op_07_rnd, 
+  op_08_flip, 
+  op_09_snd0, 
+  op_0A_snd1,  
+  op_0B_snd2, 
+  op_0C_snd3, 
+  op_0D_snp,  
+  op_0E_sng,  
   NULL,
 
   // 1x - Jumps (Branches)
@@ -784,12 +802,13 @@ op_t op_table[0x100] =
   // Bx - Logical / Arithmetic Shifts
   op_B0_shl,
   op_B1_shr,
-  op_B0_shl,
   op_B2_sar,
   op_B3_shl,
   op_B4_shr,
-  op_B3_shl,
   op_B5_sar,
+  NULL,
+  NULL,
+  NULL,
   NULL,
   NULL,
   NULL,
@@ -817,8 +836,8 @@ op_t op_table[0x100] =
   NULL,
   
   // Dx - Palette
-  NULL,
-  NULL,
+  op_D0_pal,
+  op_D1_pal,
   NULL,
   NULL,
   NULL,

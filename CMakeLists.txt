@@ -8,16 +8,19 @@ PROJECT( NCEMU )
 SET( SOURCES main.c
              emulator.c
              cpu.c
-             op.c
+             ops.c
              gpu.c
-             crc.c )
+             crc.c 
+             snd.c)
 
 SET( HEADERS emulator.h
              cpu.h
              gpu.h
-             crc.h )
+             crc.h
+             snd.h )
 
-SET( LIBS    SDL )
+SET( LIBS    SDL 
+             SDL_mixer)
 
 ADD_EXECUTABLE( ncemu ${SOURCES} ${HEADERS} )
 TARGET_LINK_LIBRARIES( ncemu ${LIBS})

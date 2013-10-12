@@ -6,6 +6,36 @@
 #include "gpu.h"
 
 
+void gpu_init( emulator_t *emu )
+{
+  // Clear
+  memset( &emu->gpu, 0, sizeof( gpu_t ) );
+  
+  // Palette
+  emu->gpu.pal[0x0] = 0x000000; // Black 
+  emu->gpu.pal[0x1] = 0x000000; // Black
+  emu->gpu.pal[0x2] = 0x888888; // Gray
+  emu->gpu.pal[0x3] = 0xBF3932; // Red
+  emu->gpu.pal[0x4] = 0xDE7AAE; // Pink
+  emu->gpu.pal[0x5] = 0x4C3D21; // Dark brown
+  emu->gpu.pal[0x6] = 0x905F25; // Brown
+  emu->gpu.pal[0x7] = 0xE49452; // Orange
+  emu->gpu.pal[0x8] = 0xEAD979; // Yello
+  emu->gpu.pal[0x9] = 0x537A3B; // Green
+  emu->gpu.pal[0xA] = 0xABD54A; // Light green
+  emu->gpu.pal[0xB] = 0x252E38; // Dark blue
+  emu->gpu.pal[0xC] = 0x00467F; // Blue
+  emu->gpu.pal[0xD] = 0x68ABCC; // Light blue
+  emu->gpu.pal[0xE] = 0xBCDEE4; // Sky blue
+  emu->gpu.pal[0xF] = 0xFFFFFF; // White  
+}
+
+
+void gpu_free( emulator_t *emu )
+{
+}
+
+
 void gpu_draw_sprite( emulator_t *emu, uint8_t *spr, int16_t x, int16_t y )
 {
   int16_t i, j, hit;
@@ -38,12 +68,12 @@ void gpu_draw_sprite( emulator_t *emu, uint8_t *spr, int16_t x, int16_t y )
         di += x + j;
       }
       
-      if ( emu->gpu.vram[ di ] ) set_c( &emu->cpu );
       
       if ( j & 1 )
       {
         if ( spr[ si ] & 0x0F )
         {
+          if ( emu->gpu.vram[ di ] ) set_c( &emu->cpu );
           emu->gpu.vram[ di ] = ( spr[ si ] & 0x0F ) >> 0;
         }
       }
@@ -51,6 +81,7 @@ void gpu_draw_sprite( emulator_t *emu, uint8_t *spr, int16_t x, int16_t y )
       {
         if ( spr[ si ] & 0xF0 )
         {
+          if ( emu->gpu.vram[ di ] ) set_c( &emu->cpu );
           emu->gpu.vram[ di ] = ( spr[ si ] & 0xF0 ) >> 4;
         }
       }
@@ -92,15 +123,16 @@ void gpu_blit( emulator_t *emu )
   emu->gpu.vblank = 1;
 }
 
+
 void gpu_load_pal( emulator_t *emu, uint8_t *pal)
 {
   int i;
   
   for ( i = 0x0; i <= 0xF; ++i )
   {
-    emu->gpu.pal[i] = ( pal[ i * 3 + 0 ] << 16 ) | 
-                      ( pal[ i * 3 + 1 ] <<  8 ) | 
-                      ( pal[ i * 3 + 2 ] <<  0 );
+    emu->gpu.pal[i] = (uint32_t) ( pal[ i * 3 + 0 ] << 16 ) | 
+                      (uint32_t) ( pal[ i * 3 + 1 ] <<  8 ) | 
+                      (uint32_t) ( pal[ i * 3 + 2 ] <<  0 );
                       
   }
 }

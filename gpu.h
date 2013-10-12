@@ -5,12 +5,12 @@
 #ifndef GPU_H
 #define GPU_H
 
+
 #include <stdint.h>
 
-#define DISPLAY_X 320
-#define DISPLAY_Y 240
 
 typedef struct _emulator_t emulator_t;
+
 
 typedef struct 
 {
@@ -30,14 +30,17 @@ typedef struct
     uint8_t vflip;
     uint8_t vblank;
 
-    uint8_t   vram[ DISPLAY_X * DISPLAY_Y ];
+    uint8_t   vram[ 320 * 240 ];
     uint32_t  pal[ 16 ];
 } gpu_t;
 
 
+void gpu_init( emulator_t *emu );
+void gpu_free( emulator_t *emu );
 void gpu_draw_sprite( emulator_t *emu, uint8_t *spr, int16_t x, int16_t y );
 void gpu_blit( emulator_t *emu );
 void gpu_load_pal( emulator_t *emu, uint8_t *loc );
+
 
 #endif
 
