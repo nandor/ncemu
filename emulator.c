@@ -8,7 +8,6 @@
 #include <string.h>
 #include <time.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
 #include "emulator.h"
 #include "crc.h"
 

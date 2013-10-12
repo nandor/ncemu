@@ -19,8 +19,7 @@ SET( HEADERS emulator.h
              crc.h
              snd.h )
 
-SET( LIBS    SDL 
-             SDL_mixer)
+SET( LIBS    SDL ) 
 
 ADD_EXECUTABLE( ncemu ${SOURCES} ${HEADERS} )
 TARGET_LINK_LIBRARIES( ncemu ${LIBS})

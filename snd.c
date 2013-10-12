@@ -6,9 +6,26 @@
 #include "snd.h"
 
 
-uint16_t attack[]  = { 2, 8, 16, 24, 38, 56, 68, 80, 100, 250, 500, 800, 1000, 3000, 5000, 8000 };
-uint16_t decay[]   = { 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
-uint16_t release[] = { 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
+uint16_t attack[] = 
+{ 
+    2, 8, 16, 24, 38, 56, 68, 80, 100, 
+    250, 500, 800, 1000, 3000, 5000, 8000 
+};
+
+
+uint16_t decay[] = 
+{ 
+  6, 24, 48, 72, 114, 168, 204, 240, 300, 
+  750, 1500, 2400, 3000, 9000, 15000, 24000 
+};
+
+
+uint16_t release[] = 
+{ 
+  6, 24, 48, 72, 114, 168, 204, 240, 300, 
+  750, 1500, 2400, 3000, 9000, 15000, 24000 
+};
+
 
 void snd_callback( void *data, uint8_t *buf, int len)
 {
@@ -36,13 +53,15 @@ void snd_init( emulator_t *emu )
 
 void snd_free( emulator_t *emu )
 {
+  SDL_LockAudio( );
   SDL_CloseAudio( );
+  SDL_UnlockAudio( );
 }
 
 
 void snd_tone( emulator_t *emu, uint16_t freq, uint16_t len )
 {
-
+  
 }
 
 void snd_stop( emulator_t *emu )
