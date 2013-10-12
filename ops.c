@@ -85,36 +85,38 @@ void op_09_snd0( emulator_t *emu, opcode_t *op )
 
 void op_0A_snd1( emulator_t *emu, opcode_t *op )
 {
-  snd_tone( emu, 500, op->hhll );
+  snd_tone( emu, 500, op->hhll, 0 );
 }
 
 
 void op_0B_snd2( emulator_t *emu, opcode_t *op )
 {
-  snd_tone( emu, 1000, op->hhll );
+  snd_tone( emu, 1000, op->hhll, 0 );
 }
 
 
 void op_0C_snd3( emulator_t *emu, opcode_t *op )
 {
-  snd_tone( emu, 1500, op->hhll );
+  snd_tone( emu, 1500, op->hhll, 0 );
 }
 
 
 void op_0E_sng( emulator_t *emu, opcode_t *op)
 {
-  snd_tone( emu, emu->cpu.r[ op->rx ], op->hhll );
+  snd_tone( emu, emu->cpu.r[ op->rx ], op->hhll, 1 );
 }
 
 
 void op_0D_snp( emulator_t *emu, opcode_t *op )
 {
-  emu->snd.att  = ( op->ad & 0xF0 ) >> 4;
-  emu->snd.dec  = ( op->ad & 0x0F ) >> 0;
-  emu->snd.vol  = ( op->hhll & 0x000F ) >> 0;
-  emu->snd.type = ( op->hhll & 0x00F0 ) >> 4;
-  emu->snd.sus  = ( op->hhll & 0x0F00 ) >> 8;
-  emu->snd.rls  = ( op->hhll & 0xF000 ) >> 12;
+  snd_t *snd = &emu->snd;
+  
+  snd->p_type = ( op->hhll & 0x00F0 ) >> 4;
+  snd->p_att = snd_att[ ( op->ad & 0xF0 ) >> 4 ];
+  snd->p_dec = snd_dec[ ( op->ad & 0x0F ) >> 0 ];
+  snd->p_rel = snd_rel[ ( op->hhll & 0xF000 ) >> 12 ];
+  snd->p_vol = SND_MAX_VOL / ( 2 * ( 16 - ( ( op->hhll & 0x000F ) >> 0 ) ) );
+  snd->p_sus = SND_MAX_VOL / ( 2 * ( 16 - ( ( op->hhll & 0x0F00 ) >> 8 ) ) );
 }
 
 
