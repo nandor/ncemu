@@ -29,7 +29,6 @@ uint16_t snd_rel[] =
 
 int16_t gen_tone( snd_t *snd )
 {  
-
   if ( ( snd->smp_idx / snd->smp_period ) & 1 )
   {
     return -snd->p_vol;
@@ -43,7 +42,63 @@ int16_t gen_tone( snd_t *snd )
 
 int16_t gen_adsr( snd_t *snd )
 {
-  return 0;
+  double sample, f;
+  int16_t p;
+  int16_t p_idx;
+  
+  p = snd->smp_idx / snd->smp_period;
+  p_idx = snd->smp_idx - p * snd->smp_period;
+  
+  switch ( snd->p_type )
+  {
+    case SND_TRIANGLE:
+    {
+      sample = 2.0 * ((double)p_idx / (double)snd->smp_period) - 1.0; 
+      sample *= p & 1 ? -1.0 : 1.0;
+      break;
+    }
+    case SND_SAWTOOTH:
+    {
+      sample = 2.0 * ((double)p_idx / (double)snd->smp_period) - 1.0; 
+      break;
+    }
+    case SND_PULSE:
+    {
+      sample = p & 1 ? -1.0 : 1.0;
+      break;
+    }
+    case SND_NOISE:
+    {
+      sample = 2.0 * ( (double)(rand() % SND_MAX_VOL ) / (double)SND_MAX_VOL ) - 1.0;
+      break;
+    }
+  }
+  
+  // Attack
+  if ( snd->smp_idx < snd->smp_att )
+  {
+    f = (double) p_idx / snd->smp_att;
+    sample *= snd->p_vol * f;
+  }
+  // Decay
+  else if ( snd->smp_idx < snd->smp_att + snd->smp_dec )
+  {
+    f = 1.0 - (double) ( snd->smp_idx - snd->smp_att ) / (double) snd->smp_dec;
+    sample *= snd->p_sus + ( snd->p_vol - snd->p_sus ) * f;
+  }
+  // Sustain
+  else if ( snd->smp_idx < snd->smp_att + snd->smp_dec + snd->smp_sus )
+  {
+    sample *= snd->p_sus;
+  }
+  // Release
+  else
+  {
+    f = 1.0 - (double) ( snd->smp_idx - snd->smp_att - snd->smp_dec - snd->smp_sus ) / snd->smp_rel;
+    sample *= snd->p_sus * f;
+  }
+  
+  return (int16_t) sample;
 }
 
 
@@ -128,14 +183,15 @@ void snd_tone( emulator_t *emu, uint16_t freq, uint16_t len, uint8_t adsr )
     emu->snd.smp_att = emu->snd.smp_count;
     emu->snd.smp_dec = 0;
   }
-  
   if ( emu->snd.smp_count + emu->snd.smp_att > emu->snd.smp_dec )
   {
     emu->snd.smp_dec = emu->snd.smp_count + emu->snd.smp_att;
   }
   
-  emu->snd.smp_count += emu->snd.smp_rel;
   emu->snd.smp_sus = emu->snd.smp_count - emu->snd.smp_att - emu->snd.smp_dec;
+  emu->snd.smp_sus = emu->snd.smp_sus > 0 ? emu->snd.smp_sus : 0;
+  
+  emu->snd.smp_count += emu->snd.smp_rel;
   
   if ( emu->snd.smp_sus < 0 )
   {
